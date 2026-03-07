@@ -1,0 +1,84 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [{ "name": "_oracle", "type": "address" }],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "setAttestation",
+    "type": "function",
+    "inputs": [
+      { "name": "user",         "type": "address" },
+      { "name": "tier",         "type": "uint8"   },
+      { "name": "expiresAt",    "type": "uint64"  },
+      { "name": "jurisdiction", "type": "bytes32" },
+      { "name": "providerHash", "type": "bytes32" },
+      { "name": "oracleRef",    "type": "bytes32" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "revokeAttestation",
+    "type": "function",
+    "inputs": [
+      { "name": "user",       "type": "address" },
+      { "name": "reasonCode", "type": "bytes32" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "batchRevoke",
+    "type": "function",
+    "inputs": [
+      { "name": "users",      "type": "address[]" },
+      { "name": "reasonCode", "type": "bytes32"   }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "isEligible",
+    "type": "function",
+    "inputs": [{ "name": "user", "type": "address" }],
+    "outputs": [{ "name": "", "type": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "name": "isEligibleForTier",
+    "type": "function",
+    "inputs": [
+      { "name": "user",    "type": "address" },
+      { "name": "minTier", "type": "uint8"   }
+    ],
+    "outputs": [{ "name": "", "type": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getActiveAddresses",
+    "type": "function",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address[]" }],
+    "stateMutability": "view"
+  },
+  {
+    "name": "AttestationIssued",
+    "type": "event",
+    "inputs": [
+      { "name": "user",      "type": "address", "indexed": true  },
+      { "name": "tier",      "type": "uint8",   "indexed": false },
+      { "name": "expiry",    "type": "uint64",  "indexed": false },
+      { "name": "oracleRef", "type": "bytes32", "indexed": false }
+    ]
+  },
+  {
+    "name": "AttestationRevoked",
+    "type": "event",
+    "inputs": [
+      { "name": "user",       "type": "address", "indexed": true  },
+      { "name": "reasonCode", "type": "bytes32", "indexed": false },
+      { "name": "timestamp",  "type": "uint64",  "indexed": false }
+    ]
+  }
+]

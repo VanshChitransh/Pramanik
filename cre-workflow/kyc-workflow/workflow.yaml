@@ -1,0 +1,10 @@
+# CRE WORKFLOW SETTINGS FILE
+# Workflow-specific config for staging target.
+
+staging-settings:
+  user-workflow:
+    workflow-name: "pramanik-kyc-verification"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path:   "./config.json"
+    secrets-path:  "../secrets.yaml"

@@ -1,0 +1,36 @@
+# Environment variables — never commit
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+bun.lockb
+
+# Hardhat artifacts
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+
+# Build outputs
+dist/
+build/
+out/
+
+# CRE workflow compiled output
+cre-workflow/dist/
+
+# Coverage
+coverage/
+lcov.info
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/

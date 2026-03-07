@@ -1,0 +1,36 @@
+[
+  {
+    "name": "requestKYC",
+    "type": "function",
+    "inputs": [{ "name": "jurisdiction", "type": "string" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "KYCRequested",
+    "type": "event",
+    "inputs": [
+      { "name": "user",         "type": "address", "indexed": true  },
+      { "name": "jurisdiction", "type": "bytes32", "indexed": false },
+      { "name": "requestId",    "type": "uint256", "indexed": true  },
+      { "name": "timestamp",    "type": "uint64",  "indexed": false }
+    ]
+  },
+  {
+    "name": "KYCFulfilled",
+    "type": "event",
+    "inputs": [
+      { "name": "user",      "type": "address", "indexed": true },
+      { "name": "requestId", "type": "uint256", "indexed": true }
+    ]
+  },
+  {
+    "name": "KYCFailed",
+    "type": "event",
+    "inputs": [
+      { "name": "user",      "type": "address", "indexed": true  },
+      { "name": "requestId", "type": "uint256", "indexed": true  },
+      { "name": "reason",    "type": "string",  "indexed": false }
+    ]
+  }
+]

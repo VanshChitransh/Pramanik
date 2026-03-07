@@ -1,0 +1,7 @@
+# CRE PROJECT SETTINGS FILE
+# Maps chain names to RPC endpoints for simulation and deployment.
+
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://virtual.sepolia.eu.rpc.tenderly.co/7cf3f7bc-78fc-4378-9b7f-3a81f887283f

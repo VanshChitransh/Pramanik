@@ -1,0 +1,18 @@
+{
+  "name": "pramanik-cre-workflow",
+  "version": "1.0.0",
+  "description": "Pramanik KYC Oracle — Chainlink CRE Workflows",
+  "scripts": {
+    "simulate:kyc": "cre workflow simulate src/kyc-verification.ts",
+    "simulate:sanctions": "cre workflow simulate src/sanctions-screening.ts",
+    "deploy:kyc": "cre workflow deploy src/kyc-verification.ts",
+    "deploy:sanctions": "cre workflow deploy src/sanctions-screening.ts",
+    "list": "cre workflow list",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "latest",
+    "viem": "^2.21.0",
+    "zod": "^3.23.0"
+  }
+}

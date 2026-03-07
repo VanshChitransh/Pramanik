@@ -1,0 +1,10 @@
+{
+  "tenderly": {
+    "MockERC20": "0x6982631017F49d558dca85D845AB0A8c3200Ba99",
+    "EligibilityRegistry": "0x1cdDB0056d4B01267a1b683423046d80180C8eE5",
+    "KYCGate": "0x6e414E0BF40196c021A2Af959e9183f254862F59",
+    "VaultRetail": "0xE08cD0eC0a803d282935B16a9eF2f57fCD68ed15",
+    "VaultAccredited": "0x4AC8f3A6Af8a0B951686Eedc4CE1799691327A4D",
+    "VaultInstitutional": "0xDFf01eD53CbbBfF448a7f9B76342bc1Ae5d467a3"
+  }
+}

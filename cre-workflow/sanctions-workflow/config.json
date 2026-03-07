@@ -1,0 +1,5 @@
+{
+  "kycApiUrl":         "https://2396-103-180-45-40.ngrok-free.app",
+  "chainSelectorName": "ethereum-testnet-sepolia",
+  "registryAddress":   "0x1cdDB0056d4B01267a1b683423046d80180C8eE5"
+}

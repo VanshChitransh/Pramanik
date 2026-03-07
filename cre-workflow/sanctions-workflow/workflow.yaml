@@ -1,0 +1,9 @@
+# CRE WORKFLOW SETTINGS FILE
+
+staging-settings:
+  user-workflow:
+    workflow-name: "pramanik-sanctions-screening"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path:   "./config.json"
+    secrets-path:  "../secrets.yaml"
