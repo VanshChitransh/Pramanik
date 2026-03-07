@@ -82,7 +82,7 @@ Chain ID: `73571` (Sepolia fork)
 | VaultAccredited (Tier 2) | `0x4AC8f3A6Af8a0B951686Eedc4CE1799691327A4D` |
 | VaultInstitutional (Tier 3) | `0xDFf01eD53CbbBfF448a7f9B76342bc1Ae5d467a3` |
 
-**Tenderly Explorer:** https://dashboard.tenderly.co/vansh/project/testnet/7cf3f7bc-78fc-4378-9b7f-3a81f887283f
+**Tenderly Explorer:** https://dashboard.tenderly.co/vanshchitransh/pramanik/testnet/4dc0a265-a1b6-4c51-b4eb-1aa712633572
 
 ---
 
