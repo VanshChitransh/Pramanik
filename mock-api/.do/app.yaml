@@ -1,0 +1,16 @@
+name: pramanik-mock-api
+services:
+  - name: api
+    source_dir: /mock-api
+    dockerfile_path: /mock-api/Dockerfile
+    http_port: 3001
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /health
+    envs:
+      - key: MOCK_API_BEARER_TOKEN
+        value: "mock-bearer-token-123"
+        type: SECRET
+      - key: PORT
+        value: "3001"

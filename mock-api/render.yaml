@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: pramanik-mock-api
+    runtime: node
+    buildCommand: "bun install && bun build src/index.ts --outdir dist --target bun"
+    startCommand: "bun run dist/index.js"
+    healthCheckPath: /health
+    envVars:
+      - key: MOCK_API_BEARER_TOKEN
+        value: mock-bearer-token-123
+      - key: PORT
+        generateValue: false
