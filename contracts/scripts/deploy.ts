@@ -54,7 +54,13 @@ async function main() {
   await vaultInstitutional.waitForDeployment();
   console.log("VaultInstitutional deployed to:", await vaultInstitutional.getAddress());
 
-  // 5. Save all addresses to .addresses.json
+  // 5. Deploy AttestationSBT (deployer as placeholder oracle)
+  const AttestationSBT = await ethers.getContractFactory("AttestationSBT");
+  const sbt = await AttestationSBT.deploy(registryAddress, deployer.address);
+  await sbt.waitForDeployment();
+  console.log("AttestationSBT deployed to:", await sbt.getAddress());
+
+  // 6. Save all addresses to .addresses.json
   const addresses = {
     tenderly: {
       MockERC20:            await mockUSDC.getAddress(),
@@ -63,6 +69,7 @@ async function main() {
       VaultRetail:          await vaultRetail.getAddress(),
       VaultAccredited:      await vaultAccredited.getAddress(),
       VaultInstitutional:   await vaultInstitutional.getAddress(),
+      AttestationSBT:       await sbt.getAddress(),
     },
   };
 

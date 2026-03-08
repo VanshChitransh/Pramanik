@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pramanik — KYC Oracle</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: monospace;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    h1 { font-size: 1.4rem; color: #f8fafc; letter-spacing: 0.05em; }
+    h2 { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase;
+         letter-spacing: 0.1em; margin-bottom: 12px; }
+
+    .page { max-width: 860px; margin: 0 auto; }
+
+    /* top bar */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; padding-bottom: 16px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    /* cards */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    /* two-column grid */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+
+    /* status pill */
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .pill-none       { background: #374151; color: #9ca3af; }
+    .pill-retail     { background: #1d4ed8; color: #bfdbfe; }
+    .pill-accredited { background: #6d28d9; color: #ddd6fe; }
+    .pill-inst       { background: #92400e; color: #fde68a; }
+    .pill-revoked    { background: #7f1d1d; color: #fca5a5; }
+    .pill-expired    { background: #374151; color: #f87171; }
+
+    /* row inside a card */
+    .row { display: flex; justify-content: space-between; align-items: center;
+           padding: 6px 0; border-bottom: 1px solid #0f172a; font-size: 0.82rem; }
+    .row:last-child { border-bottom: none; }
+    .label { color: #94a3b8; }
+    .value { color: #f1f5f9; word-break: break-all; text-align: right; max-width: 60%; }
+
+    /* inputs & buttons */
+    input, select {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #f1f5f9;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+    input:focus, select:focus { outline: 1px solid #3b82f6; }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button:hover:not(:disabled) { opacity: 0.85; }
+
+    .btn-primary  { background: #3b82f6; color: #fff; }
+    .btn-danger   { background: #ef4444; color: #fff; }
+    .btn-success  { background: #22c55e; color: #0f172a; }
+    .btn-neutral  { background: #334155; color: #e2e8f0; }
+
+    /* log */
+    #log {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 0.75rem;
+      color: #64748b;
+      height: 160px;
+      overflow-y: auto;
+      margin-top: 16px;
+    }
+    #log .entry { margin-bottom: 4px; }
+    #log .entry.ok   { color: #4ade80; }
+    #log .entry.err  { color: #f87171; }
+    #log .entry.info { color: #60a5fa; }
+    #log .entry.warn { color: #fbbf24; }
+
+    .connect-hint { color: #64748b; font-size: 0.8rem; }
+    .addr { font-size: 0.78rem; color: #94a3b8; }
+
+    .section-title {
+      font-size: 0.7rem;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div>
+      <h1>Pramanik</h1>
+      <div class="addr">Privacy-preserving KYC Oracle · Chainlink CRE · Tenderly VT</div>
+    </div>
+    <div>
+      <button id="btnConnect" class="btn-primary">Connect Wallet</button>
+      <div id="walletAddr" class="addr" style="text-align:right; margin-top:4px;"></div>
+    </div>
+  </div>
+
+  <!-- KYC Status -->
+  <div class="card">
+    <h2>KYC Status</h2>
+    <div class="row"><span class="label">Address</span>    <span class="value" id="statusAddr">—</span></div>
+    <div class="row"><span class="label">Tier</span>       <span class="value" id="statusTier"><span class="pill pill-none">NONE</span></span></div>
+    <div class="row"><span class="label">Expires</span>    <span class="value" id="statusExpiry">—</span></div>
+    <div class="row"><span class="label">Jurisdiction</span><span class="value" id="statusJuris">—</span></div>
+    <div class="row"><span class="label">Revoked</span>    <span class="value" id="statusRevoked">—</span></div>
+    <div class="row"><span class="label">isEligible()</span><span class="value" id="statusEligible">—</span></div>
+    <button id="btnRefresh" class="btn-neutral" disabled>Refresh Status</button>
+  </div>
+
+  <div class="grid2">
+
+    <!-- Request KYC -->
+    <div class="card">
+      <h2>Request KYC</h2>
+      <div class="section-title">Calls KYCGate.requestKYC()</div>
+      <select id="jurisSelect">
+        <option value="US">US</option>
+        <option value="EU">EU</option>
+        <option value="SG">SG</option>
+        <option value="GB">GB</option>
+      </select>
+      <button id="btnRequestKYC" class="btn-primary" disabled>Submit KYC Request</button>
+      <div class="row" style="margin-top:10px;">
+        <span class="label">Pending?</span>
+        <span class="value" id="pendingStatus">—</span>
+      </div>
+    </div>
+
+    <!-- Mint test USDC -->
+    <div class="card">
+      <h2>Test USDC (mUSDC)</h2>
+      <div class="section-title">MockERC20.mint() — testnet only</div>
+      <input id="mintAmount" type="number" placeholder="Amount (e.g. 5000)" value="5000" />
+      <button id="btnMint" class="btn-success" disabled>Mint mUSDC to Self</button>
+      <div class="row" style="margin-top:10px;">
+        <span class="label">Balance</span>
+        <span class="value" id="usdcBalance">—</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Vaults -->
+  <div class="card">
+    <h2>Vaults (ERC-4626)</h2>
+
+    <!-- Vault rows -->
+    <div id="vaultRows"></div>
+
+    <div style="margin-top:14px;">
+      <div class="section-title">Deposit / Withdraw</div>
+      <div class="grid2" style="gap:10px; margin-top:8px;">
+        <select id="vaultSelect">
+          <option value="retail">Retail (Tier 1)</option>
+          <option value="accredited">Accredited (Tier 2)</option>
+          <option value="institutional">Institutional (Tier 3)</option>
+        </select>
+        <input id="vaultAmount" type="number" placeholder="Amount mUSDC" value="1000" />
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="btnDeposit"  class="btn-primary" disabled>Deposit</button>
+        <button id="btnWithdraw" class="btn-danger"  disabled>Withdraw</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity log -->
+  <div id="log"><div class="entry info">Waiting for wallet connection…</div></div>
+
+</div>
+
+<script type="module">
+// ── ethers v6 via CDN ──────────────────────────────────────────────────────────
+import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.min.js";
+
+// ── Addresses ──────────────────────────────────────────────────────────────────
+const ADDR = {
+  MockERC20:           "0x6982631017F49d558dca85D845AB0A8c3200Ba99",
+  EligibilityRegistry: "0x1cdDB0056d4B01267a1b683423046d80180C8eE5",
+  KYCGate:             "0x6e414E0BF40196c021A2Af959e9183f254862F59",
+  VaultRetail:         "0xE08cD0eC0a803d282935B16a9eF2f57fCD68ed15",
+  VaultAccredited:     "0x4AC8f3A6Af8a0B951686Eedc4CE1799691327A4D",
+  VaultInstitutional:  "0xDFf01eD53CbbBfF448a7f9B76342bc1Ae5d467a3",
+};
+
+const CHAIN_ID = 9991; // Tenderly Virtual TestNet
+const EXPLORER_TX = {
+  31337:    null,                                          // localhost — no explorer
+  11155111: "https://sepolia.etherscan.io/tx/",
+  9991:     "https://dashboard.tenderly.co/1nsh/pramanik/testnet/3bb5794e-660f-4076-98fd-dddae819e8d3/tx/",
+};
+
+// ── ABIs ───────────────────────────────────────────────────────────────────────
+const REGISTRY_ABI = [
+  "function isEligible(address) view returns (bool)",
+  "function isEligibleForTier(address, uint8) view returns (bool)",
+  "function getAttestation(address) view returns (tuple(uint8 tier, uint64 issuedAt, uint64 expiresAt, bytes32 jurisdiction, bytes32 providerHash, bytes32 oracleRef, bool revoked))",
+];
+
+const GATE_ABI = [
+  "function requestKYC(string jurisdiction) external",
+  "function hasPendingRequest(address) view returns (bool)",
+  "event KYCRequested(address indexed user, bytes32 jurisdiction, uint256 indexed requestId, uint64 timestamp)",
+];
+
+const ERC20_ABI = [
+  "function mint(address to, uint256 amount) external",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function balanceOf(address) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+];
+
+const VAULT_ABI = [
+  "function deposit(uint256 assets, address receiver) returns (uint256)",
+  "function withdraw(uint256 assets, address receiver, address owner) returns (uint256)",
+  "function balanceOf(address) view returns (uint256)",
+  "function totalAssets() view returns (uint256)",
+  "function convertToAssets(uint256 shares) view returns (uint256)",
+  "error IneligibleDepositor()",
+];
+
+// ── Tier helpers ───────────────────────────────────────────────────────────────
+const TIER_LABEL = ["NONE", "RETAIL", "ACCREDITED", "INSTITUTIONAL"];
+const TIER_CLASS = ["pill-none", "pill-retail", "pill-accredited", "pill-inst"];
+
+const JURIS_MAP = {
+  [ethers.keccak256(ethers.toUtf8Bytes("US"))]: "US",
+  [ethers.keccak256(ethers.toUtf8Bytes("EU"))]: "EU",
+  [ethers.keccak256(ethers.toUtf8Bytes("SG"))]: "SG",
+  [ethers.keccak256(ethers.toUtf8Bytes("GB"))]: "GB",
+};
+
+// ── Log ────────────────────────────────────────────────────────────────────────
+const logEl = document.getElementById("log");
+let currentChainId = CHAIN_ID;
+
+function log(msg, type = "info", txHash = null) {
+  const d = document.createElement("div");
+  d.className = `entry ${type}`;
+  const time = `[${new Date().toLocaleTimeString()}]`;
+  const explorerBase = EXPLORER_TX[currentChainId];
+  if (txHash && explorerBase) {
+    d.innerHTML = `${time} ${msg} — <a href="${explorerBase}${txHash}" target="_blank" style="color:#60a5fa;text-decoration:underline">view on explorer ↗</a>`;
+  } else if (txHash) {
+    d.textContent = `${time} ${msg} — tx: ${txHash.slice(0,10)}…`;
+  } else {
+    d.textContent = `${time} ${msg}`;
+  }
+  logEl.prepend(d);
+}
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let provider, signer, userAddr;
+let registry, gate, usdc;
+let decimals = 6;
+
+const vaultContracts = {};
+const VAULTS = [
+  { key: "retail",       label: "VaultRetail",       addr: ADDR.VaultRetail,        tier: 1 },
+  { key: "accredited",   label: "VaultAccredited",    addr: ADDR.VaultAccredited,    tier: 2 },
+  { key: "institutional",label: "VaultInstitutional", addr: ADDR.VaultInstitutional, tier: 3 },
+];
+
+// ── Render vault table ─────────────────────────────────────────────────────────
+function buildVaultTable() {
+  const container = document.getElementById("vaultRows");
+  container.innerHTML = "";
+  VAULTS.forEach(v => {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.id = `vault-row-${v.key}`;
+    row.innerHTML = `
+      <span class="label">${v.label} <span class="pill pill-${["","retail","accredited","inst"][v.tier]}" style="font-size:0.65rem">${TIER_LABEL[v.tier]}</span></span>
+      <span class="value" id="vault-bal-${v.key}">—</span>
+    `;
+    container.appendChild(row);
+  });
+}
+buildVaultTable();
+
+// ── Connect ────────────────────────────────────────────────────────────────────
+document.getElementById("btnConnect").addEventListener("click", connectWallet);
+
+async function connectWallet() {
+  if (!window.ethereum) { log("MetaMask not detected", "err"); return; }
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+
+    const network = await provider.getNetwork();
+    if (network.chainId !== BigInt(CHAIN_ID)) {
+      log(`Wrong network (got ${network.chainId}). Switch MetaMask to Tenderly VT (chainId ${CHAIN_ID}).`, "warn");
+      try {
+        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x" + CHAIN_ID.toString(16) }]);
+      } catch {}
+    }
+
+    signer   = await provider.getSigner();
+    userAddr = await signer.getAddress();
+    currentChainId = Number((await provider.getNetwork()).chainId);
+
+    registry = new ethers.Contract(ADDR.EligibilityRegistry, REGISTRY_ABI, signer);
+    gate     = new ethers.Contract(ADDR.KYCGate,             GATE_ABI,     signer);
+    usdc     = new ethers.Contract(ADDR.MockERC20,           ERC20_ABI,    signer);
+    decimals = Number(await usdc.decimals());
+
+    for (const v of VAULTS) {
+      vaultContracts[v.key] = new ethers.Contract(v.addr, VAULT_ABI, signer);
+    }
+
+    document.getElementById("walletAddr").textContent = shortAddr(userAddr);
+    document.getElementById("btnConnect").textContent = "Connected";
+    document.getElementById("btnConnect").disabled = true;
+
+    enableButtons(true);
+    log(`Connected: ${userAddr}`, "ok");
+    await refreshAll();
+
+    // listen for account changes
+    window.ethereum.on("accountsChanged", () => location.reload());
+  } catch (e) {
+    log(`Connect failed: ${e.message}`, "err");
+  }
+}
+
+function enableButtons(on) {
+  ["btnRefresh","btnRequestKYC","btnMint","btnDeposit","btnWithdraw"]
+    .forEach(id => document.getElementById(id).disabled = !on);
+}
+
+function shortAddr(addr) {
+  return addr.slice(0, 6) + "…" + addr.slice(-4);
+}
+
+// ── Refresh all ────────────────────────────────────────────────────────────────
+document.getElementById("btnRefresh").addEventListener("click", refreshAll);
+
+async function refreshAll() {
+  if (!userAddr) return;
+  await Promise.all([refreshStatus(), refreshUSDC(), refreshVaults(), refreshPending()]);
+}
+
+async function refreshStatus() {
+  try {
+    const a        = await registry.getAttestation(userAddr);
+    const eligible = await registry.isEligible(userAddr);
+    const tier     = Number(a.tier);
+
+    document.getElementById("statusAddr").textContent = shortAddr(userAddr);
+
+    const nowSec = BigInt(Math.floor(Date.now() / 1000));
+    let pillClass = a.revoked ? "pill-revoked"
+      : (a.expiresAt !== 0n && nowSec > a.expiresAt) ? "pill-expired"
+      : TIER_CLASS[tier] ?? "pill-none";
+    let pillLabel = a.revoked ? "REVOKED"
+      : (a.expiresAt !== 0n && nowSec > a.expiresAt) ? "EXPIRED"
+      : TIER_LABEL[tier] ?? "NONE";
+
+    document.getElementById("statusTier").innerHTML =
+      `<span class="pill ${pillClass}">${pillLabel}</span>`;
+
+    document.getElementById("statusExpiry").textContent =
+      a.expiresAt === 0n ? "Never" : new Date(Number(a.expiresAt) * 1000).toLocaleDateString();
+
+    document.getElementById("statusJuris").textContent =
+      JURIS_MAP[a.jurisdiction] ?? (a.jurisdiction === ethers.ZeroHash ? "—" : a.jurisdiction.slice(0, 10) + "…");
+
+    document.getElementById("statusRevoked").textContent = a.revoked ? "YES" : "No";
+    document.getElementById("statusEligible").textContent = eligible ? "✓ true" : "✗ false";
+    document.getElementById("statusEligible").style.color = eligible ? "#4ade80" : "#f87171";
+  } catch (e) {
+    log(`Status fetch failed: ${e.message}`, "err");
+  }
+}
+
+async function refreshUSDC() {
+  try {
+    const bal = await usdc.balanceOf(userAddr);
+    document.getElementById("usdcBalance").textContent =
+      ethers.formatUnits(bal, decimals) + " mUSDC";
+  } catch {}
+}
+
+async function refreshVaults() {
+  for (const v of VAULTS) {
+    try {
+      const shares = await vaultContracts[v.key].balanceOf(userAddr);
+      const assets = shares > 0n
+        ? await vaultContracts[v.key].convertToAssets(shares)
+        : 0n;
+      document.getElementById(`vault-bal-${v.key}`).textContent =
+        shares > 0n
+          ? `${ethers.formatUnits(assets, decimals)} mUSDC (${ethers.formatUnits(shares, decimals)} shares)`
+          : "0 shares";
+    } catch {}
+  }
+}
+
+async function refreshPending() {
+  try {
+    const pending = await gate.hasPendingRequest(userAddr);
+    document.getElementById("pendingStatus").textContent = pending ? "✓ Yes" : "No";
+    document.getElementById("pendingStatus").style.color = pending ? "#fbbf24" : "#94a3b8";
+  } catch {}
+}
+
+// ── Request KYC ────────────────────────────────────────────────────────────────
+document.getElementById("btnRequestKYC").addEventListener("click", async () => {
+  const juris = document.getElementById("jurisSelect").value;
+  try {
+    log(`Calling KYCGate.requestKYC("${juris}")…`, "info");
+    const tx = await gate.requestKYC(juris);
+    await tx.wait();
+    log(`KYCRequested emitted for jurisdiction=${juris}`, "ok", tx.hash);
+    await refreshPending();
+  } catch (e) {
+    const msg = e?.info?.error?.message ?? e.message;
+    log(`requestKYC failed: ${msg}`, "err");
+  }
+});
+
+// ── Mint USDC ──────────────────────────────────────────────────────────────────
+document.getElementById("btnMint").addEventListener("click", async () => {
+  const raw = document.getElementById("mintAmount").value;
+  if (!raw || isNaN(raw)) { log("Enter a valid mint amount", "warn"); return; }
+  try {
+    const amount = ethers.parseUnits(raw, decimals);
+    log(`Minting ${raw} mUSDC…`, "info");
+    const tx = await usdc.mint(userAddr, amount);
+    await tx.wait();
+    log(`Minted ${raw} mUSDC to ${shortAddr(userAddr)}`, "ok", tx.hash);
+    await refreshUSDC();
+  } catch (e) {
+    log(`Mint failed: ${e.message}`, "err");
+  }
+});
+
+// ── Deposit ────────────────────────────────────────────────────────────────────
+document.getElementById("btnDeposit").addEventListener("click", async () => {
+  const key    = document.getElementById("vaultSelect").value;
+  const raw    = document.getElementById("vaultAmount").value;
+  if (!raw || isNaN(raw)) { log("Enter a valid deposit amount", "warn"); return; }
+  const vault  = vaultContracts[key];
+  const vLabel = VAULTS.find(v => v.key === key).label;
+  try {
+    const amount = ethers.parseUnits(raw, decimals);
+
+    // auto-approve if needed
+    const allowance = await usdc.allowance(userAddr, VAULTS.find(v => v.key === key).addr);
+    if (allowance < amount) {
+      log(`Approving ${vLabel} to spend mUSDC…`, "info");
+      const approveTx = await usdc.approve(VAULTS.find(v => v.key === key).addr, ethers.MaxUint256);
+      await approveTx.wait();
+      log("Approved", "ok");
+    }
+
+    log(`Depositing ${raw} mUSDC into ${vLabel}…`, "info");
+    const tx = await vault.deposit(amount, userAddr);
+    await tx.wait();
+    log(`Deposit successful`, "ok", tx.hash);
+    await Promise.all([refreshUSDC(), refreshVaults()]);
+  } catch (e) {
+    const msg = e?.info?.error?.message ?? e.message;
+    if (msg.includes("IneligibleDepositor") || msg.includes("revert")) {
+      log(`Deposit reverted: IneligibleDepositor — your KYC tier is too low for ${vLabel}`, "err");
+    } else {
+      log(`Deposit failed: ${msg}`, "err");
+    }
+  }
+});
+
+// ── Withdraw ───────────────────────────────────────────────────────────────────
+document.getElementById("btnWithdraw").addEventListener("click", async () => {
+  const key    = document.getElementById("vaultSelect").value;
+  const raw    = document.getElementById("vaultAmount").value;
+  if (!raw || isNaN(raw)) { log("Enter a valid amount", "warn"); return; }
+  const vault  = vaultContracts[key];
+  const vLabel = VAULTS.find(v => v.key === key).label;
+  try {
+    const amount = ethers.parseUnits(raw, decimals);
+    log(`Withdrawing ${raw} mUSDC from ${vLabel}…`, "info");
+    const tx = await vault.withdraw(amount, userAddr, userAddr);
+    await tx.wait();
+    log(`Withdraw successful`, "ok", tx.hash);
+    await Promise.all([refreshUSDC(), refreshVaults()]);
+  } catch (e) {
+    const msg = e?.info?.error?.message ?? e.message;
+    log(`Withdraw failed: ${msg}`, "err");
+  }
+});
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 
 Pramanik is a decentralized KYC oracle built on **Chainlink CRE** that lets DeFi protocols verify user identity on-chain without exposing any personal data.
 
-**"Prove you are who you say you are, on-chain, without revealing anything about who you are."**
+**"Prove you are who you say you are — on-chain, without revealing anything about who you are."**
 
 Built for **Chainlink Convergence 2026 — Privacy Track**.
 
@@ -46,9 +46,35 @@ User Wallet
 ```
 
 **Three layers:**
-- **Layer 1 — Contracts:** `KYCGate.sol`, `EligibilityRegistry.sol`, `PermissionedVault.sol`
+- **Layer 1 — Contracts:** `KYCGate.sol`, `EligibilityRegistry.sol`, `PermissionedVault.sol`, `AttestationSBT.sol`
 - **Layer 2 — CRE Oracle:** Two workflows running in Chainlink TEEs
 - **Layer 3 — KYC API:** Mock server simulating Jumio/Onfido/Chainalysis
+
+---
+
+## Live Demo
+
+**Testnet:** Tenderly Virtual TestNet (Mainnet fork, Chain ID `9991`)
+
+**Explorer:** https://dashboard.tenderly.co/1nsh/pramanik/testnet/3bb5794e-660f-4076-98fd-dddae819e8d3
+
+**Frontend:** Open `frontend/index.html` in any browser with MetaMask
+
+---
+
+## Deployed Contracts
+
+Chain ID: `9991` · Network: Tenderly Virtual TestNet
+
+| Contract | Address |
+|---|---|
+| MockERC20 (mUSDC) | `0x6982631017F49d558dca85D845AB0A8c3200Ba99` |
+| EligibilityRegistry | `0x1cdDB0056d4B01267a1b683423046d80180C8eE5` |
+| KYCGate | `0x6e414E0BF40196c021A2Af959e9183f254862F59` |
+| VaultRetail (Tier 1) | `0xE08cD0eC0a803d282935B16a9eF2f57fCD68ed15` |
+| VaultAccredited (Tier 2) | `0x4AC8f3A6Af8a0B951686Eedc4CE1799691327A4D` |
+| VaultInstitutional (Tier 3) | `0xDFf01eD53CbbBfF448a7f9B76342bc1Ae5d467a3` |
+| AttestationSBT | `0x6091Da9c46F890FCADC5ee3828CEcea6A1b2D0d3` |
 
 ---
 
@@ -69,24 +95,9 @@ All files using `@chainlink/cre-sdk`:
 
 ---
 
-## Deployed Contracts — Tenderly Virtual TestNet
-
-Chain ID: `73571` (Sepolia fork)
-
-| Contract | Address |
-|---|---|
-| MockERC20 (mUSDC) | `0x6982631017F49d558dca85D845AB0A8c3200Ba99` |
-| EligibilityRegistry | `0x1cdDB0056d4B01267a1b683423046d80180C8eE5` |
-| KYCGate | `0x6e414E0BF40196c021A2Af959e9183f254862F59` |
-| VaultRetail (Tier 1) | `0xE08cD0eC0a803d282935B16a9eF2f57fCD68ed15` |
-| VaultAccredited (Tier 2) | `0x4AC8f3A6Af8a0B951686Eedc4CE1799691327A4D` |
-| VaultInstitutional (Tier 3) | `0xDFf01eD53CbbBfF448a7f9B76342bc1Ae5d467a3` |
-
-**Tenderly Explorer:** https://dashboard.tenderly.co/vanshchitransh/pramanik/testnet/4dc0a265-a1b6-4c51-b4eb-1aa712633572
-
----
-
 ## CRE Workflow Simulation
+
+Both simulations pass:
 
 ```bash
 cd cre-workflow
@@ -100,36 +111,6 @@ cre workflow simulate kyc-workflow -T staging-settings \
 # Sanctions screening workflow (cron trigger)
 cre workflow simulate sanctions-workflow -T staging-settings --non-interactive --trigger-index 0
 # Output: "screened:0:revoked:0"
-```
-
-To emit a new KYCRequested event on Tenderly:
-```bash
-cd contracts
-npx hardhat run scripts/triggerKYC.ts --network tenderly
-```
-
----
-
-## Repository Structure
-
-```
-├── contracts/                  # Solidity smart contracts (Hardhat)
-│   ├── contracts/
-│   │   ├── KYCGate.sol
-│   │   ├── EligibilityRegistry.sol
-│   │   ├── PermissionedVault.sol
-│   │   └── interfaces/IEligibilityRegistry.sol
-│   └── scripts/
-│       ├── deploy.ts
-│       └── triggerKYC.ts
-├── cre-workflow/               # Chainlink CRE TypeScript workflows
-│   ├── kyc-workflow/           # EVM log trigger → KYC verification
-│   ├── sanctions-workflow/     # Cron trigger → sanctions screening
-│   ├── contracts/              # CRE contract bindings
-│   └── src/
-│       ├── adapters/           # KYC provider adapters (mock, jumio, onfido)
-│       └── utils/eligibility.ts
-└── mock-api/                   # Express mock KYC API (simulates Jumio/Onfido)
 ```
 
 ---
@@ -162,16 +143,32 @@ Zero PII ever reaches the blockchain.
 
 ---
 
-## Tech Stack
+## Repository Structure
 
-| Layer | Tech |
-|---|---|
-| Smart Contracts | Solidity ^0.8.24, OpenZeppelin 5.x, Hardhat |
-| CRE Workflows | TypeScript, @chainlink/cre-sdk, Bun |
-| Encoding | viem 2.x (WASM-compatible) |
-| Validation | Zod 3.x |
-| Mock API | Express.js 4.x, TypeScript |
-| Testnet | Tenderly Virtual TestNet (Sepolia fork) |
+```
+├── contracts/                  # Solidity smart contracts (Hardhat)
+│   ├── contracts/
+│   │   ├── KYCGate.sol         # Entry point — emits KYCRequested
+│   │   ├── EligibilityRegistry.sol  # On-chain attestation store
+│   │   ├── PermissionedVault.sol    # ERC-4626 vault gated by KYC tier
+│   │   ├── AttestationSBT.sol  # Soulbound token for KYC attestations
+│   │   └── interfaces/IEligibilityRegistry.sol
+│   └── scripts/
+│       ├── deploy.ts
+│       ├── issueAttestation.ts
+│       └── e2eTest.ts          # Full end-to-end test (20 assertions)
+├── cre-workflow/               # Chainlink CRE TypeScript workflows
+│   ├── kyc-workflow/           # EVM log trigger → KYC verification
+│   ├── sanctions-workflow/     # Cron trigger → sanctions screening
+│   ├── contracts/              # CRE contract bindings
+│   └── src/
+│       ├── adapters/           # KYC provider adapters (mock, jumio, onfido)
+│       └── utils/eligibility.ts
+├── mock-api/                   # Express mock KYC API (simulates Jumio/Onfido)
+│   └── Deployed: https://lobster-app-ieakp.ondigitalocean.app
+└── frontend/
+    └── index.html              # Single-file demo UI (ethers.js v6, MetaMask)
+```
 
 ---
 
@@ -183,19 +180,30 @@ cd contracts && npm install
 cd ../cre-workflow && bun install
 cd ../mock-api && bun install
 
-# 2. Copy env file
+# 2. Copy env
 cp .env.example .env
 # Fill in TENDERLY_RPC_URL and DEPLOYER_PRIVATE_KEY
 
-# 3. Start mock API
-cd mock-api && bun run dev
+# 3. Deploy contracts
+cd contracts
+npx hardhat run scripts/deploy.ts --network tenderly
 
-# 4. Start ngrok
-ngrok http 3001
-# Update cre-workflow/kyc-workflow/config.json and sanctions-workflow/config.json with ngrok URL
+# 4. Issue demo attestation
+npx hardhat run scripts/issueAttestation.ts --network tenderly
 
-# 5. Run CRE simulation
-cd cre-workflow
-cre workflow simulate kyc-workflow -T staging-settings \
-  --evm-tx-hash <tx_hash> --evm-event-index 0 --non-interactive --trigger-index 0
+# 5. Open frontend/index.html in browser — connect MetaMask to chainId 9991
 ```
+
+---
+
+## Tech Stack
+
+| Layer | Tech |
+|---|---|
+| Smart Contracts | Solidity ^0.8.24, OpenZeppelin 5.x, Hardhat |
+| CRE Workflows | TypeScript, @chainlink/cre-sdk, Bun |
+| Encoding | viem 2.x (WASM-compatible) |
+| Validation | Zod 3.x |
+| Mock API | Express.js 4.x, TypeScript, Digital Ocean App Platform |
+| Frontend | Vanilla HTML/JS, ethers.js v6 |
+| Testnet | Tenderly Virtual TestNet (Mainnet fork, Chain ID 9991) |

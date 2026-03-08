@@ -5,6 +5,7 @@
     "KYCGate": "0x6e414E0BF40196c021A2Af959e9183f254862F59",
     "VaultRetail": "0xE08cD0eC0a803d282935B16a9eF2f57fCD68ed15",
     "VaultAccredited": "0x4AC8f3A6Af8a0B951686Eedc4CE1799691327A4D",
-    "VaultInstitutional": "0xDFf01eD53CbbBfF448a7f9B76342bc1Ae5d467a3"
+    "VaultInstitutional": "0xDFf01eD53CbbBfF448a7f9B76342bc1Ae5d467a3",
+    "AttestationSBT": "0x6091Da9c46F890FCADC5ee3828CEcea6A1b2D0d3"
   }
 }
